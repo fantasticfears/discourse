@@ -343,6 +343,7 @@ GEM
       netrc (~> 0.7)
     rinku (1.7.3)
     rmmseg-cpp (0.2.9)
+    rotp (2.1.0)
     rspec (2.99.0)
       rspec-core (~> 2.99.0)
       rspec-expectations (~> 2.99.0)
@@ -525,6 +526,7 @@ DEPENDENCIES
   rest-client
   rinku
   rmmseg-cpp
+  rotp
   rspec (= 2.99.0)
   rspec-given
   rspec-rails
