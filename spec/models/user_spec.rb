@@ -1180,4 +1180,26 @@ describe User do
 
   end
 
+  context "Two Factor Authentication" do
+    describe ".initialize_otp_secret_key" do
+      let(:user) { Fabricate.build :user }
+
+      it "generates otp secret key" do
+        expect(user.initialize_otp_secret_key.length) == 16
+      end
+    end
+
+    describe ".enabled_two_factor_authentication?" do
+      let(:user) { Fabricate.build :user }
+
+      it "is false when the user doesn't enabled 2FA" do
+        expect(user.enabled_two_factor_authentication?).to be_false
+      end
+      it "is true when the user enabled 2FA" do
+        user.initialize_otp_secret_key
+        expect(user.enabled_two_factor_authentication?).to be_true
+      end
+    end
+  end
+
 end

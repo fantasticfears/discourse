@@ -1,0 +1,52 @@
+<section class='user-content'>
+  <form class="form-horizontal">
+
+    <div class="control-group">
+      <div class="controls">
+        <h3>Configure two factor authentication</h3>
+      </div>
+    </div>
+
+    {{#if enabledTwoFactorAuthentication}}
+      <p>You are already configured the two factor authentication.</p>
+      <div class="control-group">
+        <label class="control-label">Revoke two factor authentication</label>
+        <div class="controls">
+          {{d-button action="revoke" icon="minus-circle" label="none" class="btn-primary"}}
+        </div>
+      </div>
+    {{ else }}
+      <div class="control-group">
+        <label class="control-label">Scan the QR code</label>
+        <div class="controls">
+          <table class="otp-qr">
+            {{#each row in model.modules}}
+              <tr>
+                {{#each data in row}}
+                  <td {{bind-attr class="data:black:white"}}></td>
+                {{/each}}
+              </tr>
+            {{/each}}
+          </table>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Verify the code</label>
+        <div class="controls">
+          {{input type="text" value=code class="input-xxlarge"}}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="controls">
+          <button class="btn btn-primary" {{bind-attr disabled=disableSave}} {{action "save"}}>{{savingStatus}}</button>
+          {{#if saved}}{{i18n 'saved'}}{{/if}}
+        </div>
+      </div>
+
+    {{/if}}
+
+
+  </form>
+</section>

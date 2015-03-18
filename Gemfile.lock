@@ -344,6 +344,7 @@ GEM
     rinku (1.7.3)
     rmmseg-cpp (0.2.9)
     rotp (2.1.0)
+    rqrcode (0.4.2)
     rspec (2.99.0)
       rspec-core (~> 2.99.0)
       rspec-expectations (~> 2.99.0)
@@ -527,6 +528,7 @@ DEPENDENCIES
   rinku
   rmmseg-cpp
   rotp
+  rqrcode
   rspec (= 2.99.0)
   rspec-given
   rspec-rails

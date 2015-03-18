@@ -121,6 +121,10 @@ class User < ActiveRecord::Base
     LAST_VISIT = -2
   end
 
+  def self.otp_digits
+    6
+  end
+
   def self.max_password_length
     200
   end
@@ -711,6 +715,39 @@ class User < ActiveRecord::Base
 
   def create_user_profile
     UserProfile.create(user_id: id)
+  end
+
+  def refresh_otp_secret!
+    # be generated using RFC 3548 base32 key strings (for compatilibity with google authenticator)
+    update_attribute(:otp_secret_key, ROTP::Base32.random_base32)
+  end
+
+  def enabled_two_factor_authentication?
+    otp_secret_key_verified
+  end
+
+  def authenticate_otp(code, options = {})
+    totp = ROTP::TOTP.new(otp_secret_key, digits: User.otp_digits)
+    if drift = options[:drift]
+      totp.verify_with_drift(code, drift)
+    else
+      totp.verify(code)
+    end
+  end
+
+  def otp_code(options = {})
+    if options.is_a? Hash
+      time = options.fetch(:time, Time.zone.now)
+      padding = options.fetch(:padding, true)
+    else
+      time = options
+      padding = true
+    end
+    ROTP::TOTP.new(otp_secret_key, digits: User.otp_digits).at(time, padding)
+  end
+
+  def otp_provisioning_url(options = {})
+    ROTP::TOTP.new(otp_secret_key, options).provisioning_uri('Discourse')
   end
 
   protected

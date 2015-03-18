@@ -227,6 +227,7 @@ Discourse::Application.routes.draw do
   get "signup" => "list#latest"
 
   post "users/read-faq" => "users#read_faq"
+  get "users/two_factor_authentication" => "users#generate_two_factor_authentication_provisioning_url"
   get "users/search/users" => "users#search_users"
   get "users/account-created/" => "users#account_created"
   get "users/password-reset/:token" => "users#password_reset"
@@ -256,6 +257,9 @@ Discourse::Application.routes.draw do
   put "users/:username/preferences/avatar/pick" => "users#pick_avatar", constraints: {username: USERNAME_ROUTE_FORMAT}
   get "users/:username/preferences/card-badge" => "users#card_badge", constraints: {username: USERNAME_ROUTE_FORMAT}
   put "users/:username/preferences/card-badge" => "users#update_card_badge", constraints: {username: USERNAME_ROUTE_FORMAT}
+  get "users/:username/preferences/two-factor-authentication" => "users#two_factor_authentication", constraints: {username: USERNAME_ROUTE_FORMAT}
+  put "users/:username/preferences/two-factor-authentication" => "users#update_two_factor_authentication", constraints: {username: USERNAME_ROUTE_FORMAT}
+  put "users/:username/preferences/revoke-two-factor-authentication" => "users#revoke_two_factor_authentication", constraints: {username: USERNAME_ROUTE_FORMAT}
   get "users/:username/staff-info" => "users#staff_info", constraints: {username: USERNAME_ROUTE_FORMAT}
 
   get "users/:username/invited" => "users#invited", constraints: {username: USERNAME_ROUTE_FORMAT}
