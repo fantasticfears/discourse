@@ -1,5 +1,6 @@
 export default Ember.ObjectController.extend({
   enabledTwoFactorAuthentication: function() {
+    console.log(this.get('user'));
     return this.get('user').get('enabled_two_factor_authentication')
   }.property('enabledTwoFactorAuthentication'),
 

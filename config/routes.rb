@@ -208,6 +208,7 @@ Discourse::Application.routes.draw do
   get "session/sso_provider" => "session#sso_provider"
   get "session/current" => "session#current"
   get "session/csrf" => "session#csrf"
+  post "session/verify_two_factor_authentication_code" => "session#verify_two_factor_authentication_code"
   get "composer-messages" => "composer_messages#index"
 
   resources :users, except: [:show, :update, :destroy] do

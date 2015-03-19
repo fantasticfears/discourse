@@ -158,6 +158,16 @@ class SessionController < ApplicationController
     (user.active && user.email_confirmed?) ? login(user) : not_activated(user)
   end
 
+  def verify_two_factor_authentication_code
+    user = User.find_by(email: session[:two_factor_authentication_user_email])
+    if user.authenticate_otp(params[:code])
+      user.update_attribute(:otp_secret_verified_at, Time.zone.now)
+      login(user)
+    else
+      invalid_credentials
+    end
+  end
+
   def forgot_password
     params.require(:login)
 
@@ -243,11 +253,17 @@ class SessionController < ApplicationController
                                             reason: user.suspend_reason}) }
   end
 
+  def required_two_factor_authentication(user)
+    render json: { twoFactorAuthentication: true }
+  end
+
   def login(user)
     log_on_user(user)
 
     if payload = session.delete(:sso_payload)
       sso_provider(payload)
+    elsif !current_user
+      required_two_factor_authentication(user)
     else
       render_serialized(user, UserSerializer)
     end

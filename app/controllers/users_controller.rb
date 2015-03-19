@@ -69,9 +69,9 @@ class UsersController < ApplicationController
     guardian.ensure_can_edit!(user)
 
     if params[:secret][/\S+\?secret=(\S+)/i, 1] == user.otp_secret_key && user.authenticate_otp(params[:code])
+      user.update_attribute(:otp_secret_key_verified, true)
       render(json: success_json)
     else
-      user.update_attribute(:otp_secret_key_verified, true)
       render json: failed_json, status: 400
     end
   end
@@ -92,7 +92,7 @@ class UsersController < ApplicationController
     guardian.ensure_can_edit!(user)
 
     if user.enabled_two_factor_authentication?
-      render json: failed_json, status: 400
+      render json: success_json
     else
       user.refresh_otp_secret!
 

@@ -3,8 +3,8 @@ import RestrictedUserRoute from "discourse/routes/restricted-user";
 export default RestrictedUserRoute.extend({
   model() {
     return Discourse.ajax("/users/two_factor_authentication.json").then(function(result) {
-      console.log(result.otp);
-      return result.otp;
+      console.log(result.otp ? result.otp : 'ab');
+      return result.otp ? result.otp : {modules: {}};
     });
   },
 
