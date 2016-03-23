@@ -1,7 +1,7 @@
 class WebHooks::EventSerializer < ApplicationSerializer
   embed :objects
 
-  attributes :action, :version, :uuid, :url #, ...
+  attributes :action, :version, :uuid #, ...
 
   # no actual model yet, it's a stub
   def action
