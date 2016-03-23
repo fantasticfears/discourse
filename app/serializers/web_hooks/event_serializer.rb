@@ -1,8 +1,14 @@
 class WebHooks::EventSerializer < ApplicationSerializer
   embed :objects
 
-  attributes :action, :version, :uuid #, ...
+  attributes :event_type, :action, :version, :uuid #, ...
 
+  # consistent with event types in webhooks
+  def event_type
+  end
+
+  # more specific actions "<resources>.<action>.<subaction>"
+  # can change based on need
   # no actual model yet, it's a stub
   def action
     # :topic_created to 'topic.created'
