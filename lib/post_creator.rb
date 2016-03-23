@@ -5,6 +5,7 @@ require_dependency 'topic_creator'
 require_dependency 'post_jobs_enqueuer'
 require_dependency 'distributed_mutex'
 require_dependency 'has_errors'
+require_dependency 'web_hooks'
 
 class PostCreator
   include HasErrors
@@ -220,7 +221,7 @@ class PostCreator
     DiscourseEvent.trigger(:topic_created, post.topic, @opts, @user) unless @opts[:topic_id]
     DiscourseEvent.trigger(:post_created, post, @opts, @user)
 
-    WebHooks.hooks(:topic_created).each do |webhook_id|
+    WebHooks.where(:topic_created).each do |webhook_id|
       # enqueue a job
       #
       # job defines as:
@@ -228,7 +229,7 @@ class PostCreator
       #
       # 1. build payload
       # attr for serializers should be utilized in WebHook.build_payload(event_type, models, opts)
-      s = WebHooks::TopicEventSerializer(post.topic.merge(event_type: :topic_created))
+      s = WebHooks::TopicEventSerializer.new(post.topic.serializable_hash.merge(event_type: :topic_created))
       p s.to_json
       # 2. build HTTP request
       # 3. Log the event in event model
