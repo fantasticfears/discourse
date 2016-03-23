@@ -219,6 +219,25 @@ class PostCreator
   def trigger_after_events(post)
     DiscourseEvent.trigger(:topic_created, post.topic, @opts, @user) unless @opts[:topic_id]
     DiscourseEvent.trigger(:post_created, post, @opts, @user)
+
+    WebHooks.hooks(:topic_created).each do |webhook_id|
+      # enqueue a job
+      #
+      # job defines as:
+      # hook = WebHook.find(webhook_id)
+      #
+      # 1. build payload
+      # attr for serializers should be utilized in WebHook.build_payload(event_type, models, opts)
+      s = WebHooks::TopicEventSerializer(post.topic.merge(event_type: :topic_created))
+      p s.to_json
+      # 2. build HTTP request
+      # 3. Log the event in event model
+      # Event.create()
+      # 4. Fire the event
+      # 4. Update the event record according to the request
+      #
+      # all done
+    end
   end
 
   def transaction(&blk)
