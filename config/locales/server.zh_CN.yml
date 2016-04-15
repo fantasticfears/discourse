@@ -45,7 +45,7 @@ zh_CN:
         topic_not_found_error: "当回复到已经删除的相关主题时发生。"
         topic_closed_error: "当回复到已经关闭的相关主题时发生。"
   errors: &errors
-    format: '%{attribute} %{message}'
+    format: '%{attribute}%{message}'
     messages:
       too_long_validation: "最多只能有 %{max} 个字符；你已经输入了 %{length} 个字符。"
       invalid_boolean: "无效布尔值。"
@@ -60,7 +60,7 @@ zh_CN:
       exclusion: 被保留
       greater_than: 必须大于 %{count}
       greater_than_or_equal_to: 必须大于或等于 %{count}
-      has_already_been_used: "已经被使用"
+      has_already_been_used: "不能和其他%{attribute}重复"
       inclusion: 不包括在列表中
       invalid: 无效
       is_invalid: "无效；请描述得更详尽些"
@@ -137,7 +137,6 @@ zh_CN:
   user_is_suspended: "被封禁的用户不允许发贴。"
   topic_not_found: "出现问题。也许这个话题被关闭或删除。"
   just_posted_that: "与你最近发表的帖子太过相似"
-  has_already_been_used: "已经被使用"
   invalid_characters: "包含无效字符"
   is_invalid: "无效；请描述得更清楚一点"
   next_page: "下一页 →"
@@ -246,6 +245,8 @@ zh_CN:
     attributes:
       category:
         name: "分类名称"
+      topic:
+        title: "标题"
       post:
         raw: "内容"
       user_profile:
