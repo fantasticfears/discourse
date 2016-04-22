@@ -2,6 +2,8 @@
 #  an authentication system interacts with our database and middleware
 
 class Auth::Authenticator
+  # MUST be implemented to assign different fields in Auth::Result.
+  # auth_options is returned by Omniauth
   def after_authenticate(auth_options)
     raise NotImplementedError
   end
@@ -9,7 +11,10 @@ class Auth::Authenticator
   # can be used to hook in after the authentication process
   #  to ensure records exist for the provider in the db
   #  this MUST be implemented for authenticators that do not
-  #  trust email
+  #  trust email.
+  # auth hash is passed by session. The payload is already
+  # huge for cookies. Be careful not passing huge hash from
+  # .after_authenticate
   def after_create_account(user, auth)
     # not required
   end

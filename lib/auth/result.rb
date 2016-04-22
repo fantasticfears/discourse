@@ -1,3 +1,5 @@
+# Used for serializing authentication from Omniauth authenticators
+#
 class Auth::Result
   attr_accessor :user, :name, :username, :email, :user,
                 :email_valid, :extra_data, :awaiting_activation,
@@ -16,6 +18,9 @@ class Auth::Result
     !!@failed
   end
 
+  # If .after_authenticate succeed, this will pass along in user creation request.
+  # UserAuthenticator will invoked .after_create_account by this hash.
+  # Be aware session is stored in cookies which has a size limit of 4K.
   def session_data
     { email: email,
       username: username,
@@ -26,6 +31,8 @@ class Auth::Result
       extra_data: extra_data }
   end
 
+  # Used to return a hash by session for client to proceed or
+  # continue asking information.
   def to_client_hash
     if requires_invite
       { requires_invite: true }
