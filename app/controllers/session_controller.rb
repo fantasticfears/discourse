@@ -2,28 +2,27 @@ require_dependency 'rate_limiter'
 require_dependency 'single_sign_on'
 
 class SessionController < ApplicationController
+  helper SsoHelper
 
   skip_before_filter :redirect_to_login_if_required
-  skip_before_filter :preload_json, :check_xhr, only: ['sso', 'sso_login', 'become', 'sso_provider']
+  skip_before_filter :preload_json, :check_xhr, only: [:sso, :sso_login, :become, :sso_provider]
 
   def csrf
     render json: {csrf: form_authenticity_token }
   end
 
   def sso
-    return_path = if params[:return_path]
-      params[:return_path]
-    elsif session[:destination_url]
-      URI::parse(session[:destination_url]).path
-    else
-      path('/')
-    end
-
     if SiteSetting.enable_sso?
+      return_path = if params[:return_path]
+                      params[:return_path]
+                    elsif session[:destination_url]
+                      URI::parse(session[:destination_url]).path
+                    else
+                      path('/')
+                    end
+
       sso = DiscourseSingleSignOn.generate_sso(return_path)
-      if SiteSetting.verbose_sso_logging
-        Rails.logger.warn("Verbose SSO log: Started SSO process\n\n#{sso.diagnostics}")
-      end
+      verbose_sso_log("Started SSO process", sso.diagnostics)
       redirect_to sso.to_url
     else
       render nothing: true, status: 404
@@ -73,17 +72,13 @@ class SessionController < ApplicationController
 
     sso = DiscourseSingleSignOn.parse(request.query_string)
     if !sso.nonce_valid?
-      if SiteSetting.verbose_sso_logging
-        Rails.logger.warn("Verbose SSO log: Nonce has already expired\n\n#{sso.diagnostics}")
-      end
+      verbose_sso_log("Nonce has already expired", sso.diagnostics)
       return render(text: I18n.t("sso.timeout_expired"), status: 419)
     end
 
     if ScreenedIpAddress.should_block?(request.remote_ip)
-      if SiteSetting.verbose_sso_logging
-        Rails.logger.warn("Verbose SSO log: IP address is blocked #{request.remote_ip}\n\n#{sso.diagnostics}")
-      end
-      return render(text: I18n.t("sso.unknown_error"), status: 500)
+      verbose_sso_log("IP address is blocked #{request.remote_ip}", sso.diagnostics)
+      return render(text: I18n.t("sso.unknown_error"), status: 403)
     end
 
     return_path = sso.return_path
@@ -105,9 +100,7 @@ class SessionController < ApplicationController
           session["user_created_message"] = activation.message
           redirect_to users_account_created_path and return
         else
-          if SiteSetting.verbose_sso_logging
-            Rails.logger.warn("Verbose SSO log: User was logged on #{user.username}\n\n#{sso.diagnostics}")
-          end
+          verbose_sso_log("User was logged on #{user.username}", sso.diagnostics)
           log_on_user user
         end
 
