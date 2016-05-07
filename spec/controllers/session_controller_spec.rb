@@ -20,6 +20,20 @@ describe SessionController do
     end
   end
 
+  describe '.sso' do
+    it 'rejects request without enabling' do
+      SiteSetting.enable_sso = false
+      get :sso
+      expect(response.status).to eq 404
+    end
+
+    it 'redirect request' do
+      SiteSetting.enable_sso = true
+      get :sso
+      expect(response).to be_redirect
+    end
+  end
+
   describe '.sso_login' do
 
     before do
@@ -264,63 +278,6 @@ describe SessionController do
       expect(response.code).to eq('419')
     end
 
-    describe 'can act as an SSO provider' do
-      before do
-        SiteSetting.enable_sso_provider = true
-        SiteSetting.enable_sso = false
-        SiteSetting.enable_local_logins = true
-        SiteSetting.sso_secret = "topsecret"
-
-        @sso = SingleSignOn.new
-        @sso.nonce = "mynonce"
-        @sso.sso_secret = SiteSetting.sso_secret
-        @sso.return_sso_url = "http://somewhere.over.rainbow/sso"
-
-        @user = Fabricate(:user, password: "frogs", active: true, admin: true)
-        EmailToken.update_all(confirmed: true)
-      end
-
-      it "successfully logs in and redirects user to return_sso_url when the user is not logged in" do
-        get :sso_provider, Rack::Utils.parse_query(@sso.payload)
-        expect(response).to redirect_to("/login")
-
-        xhr :post, :create, login: @user.username, password: "frogs", format: :json
-
-        location = cookies[:sso_destination_url]
-        # javascript code will handle redirection of user to return_sso_url
-        expect(location).to match(/^http:\/\/somewhere.over.rainbow\/sso/)
-
-        payload = location.split("?")[1]
-        sso2 = SingleSignOn.parse(payload, "topsecret")
-
-        expect(sso2.email).to eq(@user.email)
-        expect(sso2.name).to eq(@user.name)
-        expect(sso2.username).to eq(@user.username)
-        expect(sso2.external_id).to eq(@user.id.to_s)
-        expect(sso2.admin).to eq(true)
-        expect(sso2.moderator).to eq(false)
-      end
-
-      it "successfully redirects user to return_sso_url when the user is logged in" do
-        log_in_user(@user)
-
-        get :sso_provider, Rack::Utils.parse_query(@sso.payload)
-
-        location = response.header["Location"]
-        expect(location).to match(/^http:\/\/somewhere.over.rainbow\/sso/)
-
-        payload = location.split("?")[1]
-        sso2 = SingleSignOn.parse(payload, "topsecret")
-
-        expect(sso2.email).to eq(@user.email)
-        expect(sso2.name).to eq(@user.name)
-        expect(sso2.username).to eq(@user.username)
-        expect(sso2.external_id).to eq(@user.id.to_s)
-        expect(sso2.admin).to eq(true)
-        expect(sso2.moderator).to eq(false)
-      end
-    end
-
     describe 'local attribute override from SSO payload' do
       before do
         SiteSetting.stubs("sso_overrides_email").returns(true)
@@ -373,6 +330,63 @@ describe SessionController do
         expect(logged_on_user.email).to eq(@user.email)
       end
 
+    end
+  end
+
+  describe '.sso_provider' do
+    before do
+      SiteSetting.enable_sso_provider = true
+      SiteSetting.enable_sso = false
+      SiteSetting.enable_local_logins = true
+      SiteSetting.sso_secret = "topsecret"
+
+      @sso = SingleSignOn.new
+      @sso.nonce = "mynonce"
+      @sso.sso_secret = SiteSetting.sso_secret
+      @sso.return_sso_url = "http://somewhere.over.rainbow/sso"
+
+      @user = Fabricate(:user, password: "frogs", active: true, admin: true)
+      EmailToken.update_all(confirmed: true)
+    end
+
+    it "successfully logs in and redirects user to return_sso_url when the user is not logged in" do
+      get :sso_provider, Rack::Utils.parse_query(@sso.payload)
+      expect(response).to redirect_to("/login")
+
+      xhr :post, :create, login: @user.username, password: "frogs", format: :json
+
+      location = cookies[:sso_destination_url]
+      # javascript code will handle redirection of user to return_sso_url
+      expect(location).to match(/^http:\/\/somewhere.over.rainbow\/sso/)
+
+      payload = location.split("?")[1]
+      sso2 = SingleSignOn.parse(payload, "topsecret")
+
+      expect(sso2.email).to eq(@user.email)
+      expect(sso2.name).to eq(@user.name)
+      expect(sso2.username).to eq(@user.username)
+      expect(sso2.external_id).to eq(@user.id.to_s)
+      expect(sso2.admin).to eq(true)
+      expect(sso2.moderator).to eq(false)
+    end
+
+    it "successfully redirects user to return_sso_url when the user is logged in" do
+      log_in_user(@user)
+
+      get :sso_provider, Rack::Utils.parse_query(@sso.payload)
+
+      location = response.header["Location"]
+      expect(location).to match(/^http:\/\/somewhere.over.rainbow\/sso/)
+
+      payload = location.split("?")[1]
+      sso2 = SingleSignOn.parse(payload, "topsecret")
+
+      expect(sso2.email).to eq(@user.email)
+      expect(sso2.name).to eq(@user.name)
+      expect(sso2.username).to eq(@user.username)
+      expect(sso2.external_id).to eq(@user.id.to_s)
+      expect(sso2.admin).to eq(true)
+      expect(sso2.moderator).to eq(false)
     end
   end
 

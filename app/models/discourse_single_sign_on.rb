@@ -1,5 +1,7 @@
 require_dependency 'single_sign_on'
 
+# Responsible for parse and generate SSO payload.
+# Base class `SingleSignOn` can be a building block as of SSO provider.
 class DiscourseSingleSignOn < SingleSignOn
 
   def self.sso_url
@@ -47,51 +49,20 @@ class DiscourseSingleSignOn < SingleSignOn
   end
 
   def lookup_or_create_user(ip_address=nil)
-    sso_record = SingleSignOnRecord.find_by(external_id: external_id)
+    @ip_address = ip_address
 
-    if sso_record && user = sso_record.user
-      sso_record.last_payload = unsigned_payload
-    else
-      user = match_email_or_create_user(ip_address)
-      sso_record = user.single_sign_on_record
-    end
+    setup_models
+    update_records
+    post_actions
 
-    # if the user isn't new or it's attached to the SSO record we might be overriding username or email
-    unless user.new_record?
-      change_external_attributes_and_override(sso_record, user)
-    end
-
-    if sso_record && (user = sso_record.user) && !user.active && !require_activation
-      user.active = true
-      user.save!
-      user.enqueue_welcome_message('welcome_user') unless suppress_welcome_message
-    end
-
-    custom_fields.each do |k,v|
-      user.custom_fields[k] = v
-    end
-
-    user.ip_address = ip_address
-
-    user.admin = admin unless admin.nil?
-    user.moderator = moderator unless moderator.nil?
-
-    # optionally save the user and sso_record if they have changed
-    user.save!
-
-    unless admin.nil? && moderator.nil?
-      Group.refresh_automatic_groups!(:admins, :moderators, :staff)
-    end
-
-    sso_record.save!
-
-    sso_record && sso_record.user
+    @user_record.reload
   end
 
   private
 
-  def match_email_or_create_user(ip_address)
-    unless user = User.find_by_email(email)
+  def find_by_email_or_initialize_user
+    user = User.find_by_email(email)
+    unless user
       try_name = name.presence
       try_username = username.presence
 
@@ -99,52 +70,90 @@ class DiscourseSingleSignOn < SingleSignOn
         email: email,
         name: try_name || User.suggest_name(try_username || email),
         username: UserNameSuggester.suggest(try_username || try_name || email),
-        ip_address: ip_address
+        ip_address: @ip_address
       }
 
-      user = User.create!(user_params)
-    end
-
-    if user
-      if sso_record = user.single_sign_on_record
-        sso_record.last_payload = unsigned_payload
-        sso_record.external_id = external_id
-      else
-        user.create_single_sign_on_record(last_payload: unsigned_payload,
-                                          external_id: external_id,
-                                          external_username: username,
-                                          external_email: email,
-                                          external_name: name)
-      end
+      user = User.new(user_params)
     end
 
     user
   end
 
-  def change_external_attributes_and_override(sso_record, user)
-    if SiteSetting.sso_overrides_email && user.email != email
-      user.email = email
+  def override_user_attributes
+    if SiteSetting.sso_overrides_email && @user_record.email != email
+      @user_record.email = email
     end
 
-    if SiteSetting.sso_overrides_username && user.username != username && username.present?
-      user.username = UserNameSuggester.suggest(username || name || email, user.username)
+    if SiteSetting.sso_overrides_username && username.present? && @user_record.username != username
+      @user_record.username = UserNameSuggester.suggest(username || name || email, @user_record.username)
     end
 
-    if SiteSetting.sso_overrides_name && user.name != name && name.present?
-      user.name = name || User.suggest_name(username.blank? ? email : username)
+    if SiteSetting.sso_overrides_name && name.present? && @user_record.name != name
+      @user_record.name = name || User.suggest_name(username.blank? ? email : username)
     end
 
     if SiteSetting.sso_overrides_avatar && avatar_url.present? && (
-      avatar_force_update ||
-      sso_record.external_avatar_url != avatar_url)
+      avatar_force_update || @previous_avatar_url != avatar_url)
+      UserAvatar.import_url_for_user(avatar_url, @user_record)
+    end
+  end
 
-      UserAvatar.import_url_for_user(avatar_url, user)
+  def setup_models
+    @user_record = SingleSignOnRecord.find_by(external_id: external_id).try(:user)
+    unless @user_record
+      @user_record = find_by_email_or_initialize_user
+    end
+    @sso_record = @user_record.single_sign_on_record || @user_record.build_single_sign_on_record
+
+    # flags to enable post sso actions
+    @is_new_user = @user_record.new_record?
+    @previous_avatar_url = @sso_record.external_avatar_url
+    @enqueue_welcome = false
+  end
+
+  def update_records
+    @sso_record.last_payload = unsigned_payload
+    @sso_record.external_id = external_id
+    @sso_record.external_username = username
+    @sso_record.external_email = email
+    @sso_record.external_name = name
+    @sso_record.external_avatar_url = avatar_url
+
+    if !@user_record.active && !require_activation
+      @user_record.active = true
+      @enqueue_welcome = true
     end
 
-    # change external attributes for sso record
-    sso_record.external_username = username
-    sso_record.external_email = email
-    sso_record.external_name = name
-    sso_record.external_avatar_url = avatar_url
+    custom_fields.each do |k,v|
+      @user_record.custom_fields[k] = v
+    end
+
+    @user_record.ip_address = @ip_address
+    @user_record.admin = admin unless admin.nil?
+    @user_record.moderator = moderator unless moderator.nil?
+
+    @user_record.save!
+    @sso_record.save!
+  end
+
+  def post_actions
+    @user_record.reload
+
+    unless admin.nil? && moderator.nil?
+      Group.refresh_automatic_groups!(:admins, :moderators, :staff)
+    end
+
+    if @enqueue_welcome
+      @user_record.enqueue_welcome_message('welcome_user') unless @suppress_welcome_message
+    end
+
+    if @is_new_user
+      UserAvatar.import_url_for_user(avatar_url, @user_record) if avatar_url.present?
+    else
+      override_user_attributes
+    end
+
+    @user_record.save!
+    @user_record.user_avatar.save!
   end
 end

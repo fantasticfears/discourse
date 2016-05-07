@@ -2,7 +2,7 @@ require_dependency 'rate_limiter'
 require_dependency 'single_sign_on'
 
 class SessionController < ApplicationController
-  helper SsoHelper
+  include SsoHelper
 
   skip_before_filter :redirect_to_login_if_required
   skip_before_filter :preload_json, :check_xhr, only: [:sso, :sso_login, :become, :sso_provider]
@@ -65,13 +65,21 @@ class SessionController < ApplicationController
     redirect_to path("/")
   end
 
+  # This complex endpoint do (in order):
+  # 1. Expire nonce immediately
+  # 2. Check permission before sso process
+  # 3. Find/Create/Update user and associate sso record
+  # 4. Activate/Approve user
   def sso_login
     unless SiteSetting.enable_sso
       return render(nothing: true, status: 404)
     end
 
     sso = DiscourseSingleSignOn.parse(request.query_string)
-    if !sso.nonce_valid?
+    if sso.nonce_valid?
+      return_path = sso.return_path
+      sso.expire_nonce!
+    else
       verbose_sso_log("Nonce has already expired", sso.diagnostics)
       return render(text: I18n.t("sso.timeout_expired"), status: 419)
     end
@@ -80,9 +88,6 @@ class SessionController < ApplicationController
       verbose_sso_log("IP address is blocked #{request.remote_ip}", sso.diagnostics)
       return render(text: I18n.t("sso.unknown_error"), status: 403)
     end
-
-    return_path = sso.return_path
-    sso.expire_nonce!
 
     begin
       if user = sso.lookup_or_create_user(request.remote_ip)
