@@ -28,3 +28,9 @@ Fabricator(:topic_web_hook, from: :web_hook) do
     web_hook.web_hook_event_types = [transients[:topic_hook]]
   end
 end
+
+Fabricator(:web_hook_event) do
+  web_hook
+  status 200
+end
+

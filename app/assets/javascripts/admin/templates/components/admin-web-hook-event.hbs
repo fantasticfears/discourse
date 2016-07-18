@@ -1,0 +1,16 @@
+<div class="col first">
+  <span class="{{statusColorClasses}}">{{model.status}}</span>
+</div>
+<div class="col">{{model.id}}</div>
+<div class="col">{{createdAt}}</div>
+<div class="col">{{completion}}</div>
+<div class="col actions">
+  {{d-button icon='ellipsis-v' action='toggleRequest' label='admin.web_hooks.events.request'}}
+  {{d-button icon='ellipsis-v' action='toggleResponse' label='admin.web_hooks.events.response'}}
+  {{d-button icon='refresh' action='redeliver' label='admin.web_hooks.events.redeliver'}}
+</div>
+<div class="clearfix"></div>
+{{#if expandDetails}}
+  <pre><code>{{headers}}</code></pre>
+  <pre><code>{{body}}</code></pre>
+{{/if}}

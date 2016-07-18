@@ -317,6 +317,18 @@ td.flaggers td {
   }
 }
 
+.text-successful {
+  color: $success;
+}
+
+.text-danger {
+  color: $danger;
+}
+
+.text-muted {
+  color: lighten($primary, 40);
+}
+
 .admin-nav {
   width: 18.018%;
   position: relative;
@@ -1393,7 +1405,7 @@ table.api-keys {
   position: absolute;
 }
 
-.staff-actions, .screened-emails, .screened-urls, .screened-ip-addresses, .permalinks {
+.staff-actions, .screened-emails, .screened-urls, .screened-ip-addresses, .permalinks, .web-hook-events {
 
   border-bottom: dotted 1px dark-light-choose(scale-color($primary, $lightness: 75%), scale-color($secondary, $lightness: 25%));
 
