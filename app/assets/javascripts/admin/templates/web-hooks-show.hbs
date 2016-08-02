@@ -49,9 +49,14 @@
 
     <div class='filters'>
       <div>
-        <label>{{fa-icon 'circle' class='tracking'}}{{i18n 'admin.web_hooks.category_filters'}}</label>
-        {{category-group categories=model.categoryFilters blacklist=model.categoryFilters}}
-        <div class="instructions">{{i18n 'admin.web_hooks.category_filters_instructions'}}</div>
+        <label>{{fa-icon 'circle' class='tracking'}}{{i18n 'admin.web_hooks.filtered_categories'}}</label>
+        {{category-selector categories=model.filteredCategories blacklist=model.filteredCategories}}
+        <div class="instructions">{{i18n 'admin.web_hooks.filtered_categories_instructions'}}</div>
+      </div>
+      <div>
+        <label>{{fa-icon 'circle' class='tracking'}}{{i18n 'admin.web_hooks.filtered_groups'}}</label>
+        {{groups-filter groups=model.filteredGroups blacklist=model.filteredGroups}}
+        <div class="instructions">{{i18n 'admin.web_hooks.filtered_groups_instructions'}}</div>
       </div>
     </div>
 

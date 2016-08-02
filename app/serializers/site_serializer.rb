@@ -29,7 +29,7 @@ class SiteSerializer < ApplicationSerializer
 
   def groups
     cache_fragment("group_names") do
-      Group.order(:name).pluck(:id,:name).map { |id,name| { id: id, name: name } }.as_json
+      Group.order(:name).pluck(%i{id name automatic}).map { |id,name,automatic| { id: id, name: name, automatic: automatic } }.as_json
     end
   end
 

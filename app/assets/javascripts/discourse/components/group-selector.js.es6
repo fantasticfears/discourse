@@ -1,35 +1,47 @@
-export default Ember.Component.extend({
-  placeholder: function(){
-    return I18n.t(this.get("placeholderKey"));
-  }.property("placeholderKey"),
+import { on, computed } from 'ember-addons/ember-computed-decorators';
+import StringBuffer from 'discourse/mixins/string-buffer';
 
-  _initializeAutocomplete: function() {
-    var self = this;
-    var selectedGroups;
+export default Ember.Component.extend(StringBuffer, {
+  @computed('placeholderKey')
+  placeholder(placeholderKey) {
+    return placeholderKey ? I18n.t(this.get('placeholderKey')) : null;
+  },
 
-    var template = this.container.lookup('template:group-selector-autocomplete.raw');
-    self.$('input').autocomplete({
+  renderString(buffer) {
+    const placeholder = this.get('placeholder');
+
+    buffer.push("<input class='group-selector' ");
+    if (placeholder) {
+      buffer.push(`placeholder='${placeholder}' `);
+    }
+    buffer.push("type='text' name='groups'");
+  },
+
+  @on('didInsertElement')
+  _initializeAutocomplete() {
+    const self = this,
+          template = this.container.lookup('template:group-selector-autocomplete.raw');
+    let selectedGroups;
+
+    this.$('input').autocomplete({
       allowAny: false,
-      onChangeItems: function(items){
+      template,
+      onChangeItems(items) {
         selectedGroups = items;
-        self.set("groupNames", items.join(","));
+        self.set('groupNames', items.join(','));
       },
-      transformComplete: function(g) {
-        return g.name;
-      },
-      dataSource: function(term) {
-        return self.get("groupFinder")(term).then(function(groups){
-
-          if(!selectedGroups){
+      transformComplete: g => g.name,
+      dataSource: term => {
+        return self.get('groupFinder')(term).then(groups => {
+          if (!selectedGroups) {
             return groups;
           }
 
-          return groups.filter(function(group){
-            return !selectedGroups.any(function(s){return s === group.name;});
+          return groups.filter(group => {
+            return !selectedGroups.any(s => s === group.name);
           });
         });
-      },
-      template: template
+      }
     });
-  }.on('didInsertElement')
+  }
 });
