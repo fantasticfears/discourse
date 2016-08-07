@@ -33,7 +33,7 @@
     {{/if}}
     {{#if showGroups}}
       <label><span class={{showGroupsClass}}>{{i18n 'topic.automatically_add_to_groups'}}</span></label>
-      {{group-selector groupFinder=groupFinder groupNames=model.groupNames placeholderKey="topic.invite_private.group_name"}}
+      {{group-selector groups=groups blacklist=groupBlacklist placeholderKey="topic.invite_private.group_name"}}
     {{/if}}
 
     {{#if showCustomMessage}}

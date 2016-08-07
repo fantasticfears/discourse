@@ -168,7 +168,11 @@ Group.reopenClass({
         offset: offset || 0
       }
     });
-  }
+  },
+
+  list() {
+    return Discourse.Site.currentProp('groups');
+  },
 });
 
 export default Group;

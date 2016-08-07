@@ -1,4 +1,4 @@
-import { on, computed } from 'ember-addons/ember-computed-decorators';
+import { on, default as computed } from 'ember-addons/ember-computed-decorators';
 import StringBuffer from 'discourse/mixins/string-buffer';
 
 export default Ember.Component.extend(StringBuffer, {
@@ -21,27 +21,29 @@ export default Ember.Component.extend(StringBuffer, {
   _initializeAutocomplete() {
     const self = this,
           template = this.container.lookup('template:group-selector-autocomplete.raw');
-    let selectedGroups;
 
     this.$('input').autocomplete({
+      items: this.get('groups'),
+      single: false,
       allowAny: false,
-      template,
-      onChangeItems(items) {
-        selectedGroups = items;
-        self.set('groupNames', items.join(','));
-      },
-      transformComplete: g => g.name,
-      dataSource: term => {
-        return self.get('groupFinder')(term).then(groups => {
-          if (!selectedGroups) {
-            return groups;
-          }
-
-          return groups.filter(group => {
-            return !selectedGroups.any(s => s === group.name);
-          });
+      dataSource(term) {
+        return Group.list().filter(group => {
+          const regex = new RegExp(term, 'i');
+          return group.get('name').match(regex) &&
+            !_.contains(self.get('blacklist') || [], group) &&
+            !_.contains(self.get('groups'), group) ;
         });
-      }
+      },
+      onChangeItems(items) {
+        const groups = Group.list().filter(group => {
+          if (items.any(group.get('name'))) {
+            return group;
+          }
+        });
+        Em.run.next(() => self.set('groups', groups));
+      },
+      template,
+      transformComplete: g => g.name
     });
   }
 });

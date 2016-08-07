@@ -12,11 +12,11 @@ export default Ember.Component.extend(StringBuffer, {
   renderString(buffer) {
     const placeholder = this.get('placeholder');
 
-    buffer.push("<input class='group-selector' ");
+    buffer.push("<input class='category-selector' ");
     if (placeholder) {
       buffer.push(`placeholder='${placeholder}' `);
     }
-    buffer.push("type='text' name='groups'");
+    buffer.push("type='text' name='categories'");
   },
 
   @on('didInsertElement')

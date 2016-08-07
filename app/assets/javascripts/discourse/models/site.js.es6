@@ -114,6 +114,10 @@ Site.reopenClass(Singleton, {
       });
     }
 
+    if (result.groups) {
+      result.groups = _.map(result.groups, g => store.createRecord('group', g));
+    }
+
     if (result.trust_levels) {
       result.trustLevels = result.trust_levels.map(tl => Discourse.TrustLevel.create(tl));
       delete result.trust_levels;
