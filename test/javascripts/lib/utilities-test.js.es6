@@ -27,6 +27,9 @@ test("urlValid", function() {
   ok(urlValid('http://meta.discourse.org/'), "allows http url");
   ok(urlValid('http://meta.discourse.org'), "allows url without trailing slash");
   ok(urlValid('https://meta.discourse.org/'), "allows https url");
+  ok(urlValid('http://142.42.1.1:8080/'), "allows ip with port");
+  ok(urlValid('http://उदाहरण.परीक्षा'), "allows unicode url");
+  ok(urlValid("http://a.b-c.de"));
   not(urlValid('meta.discourse.org'), "disallows domain name");
   not(urlValid('ftp://meta.discourse.org/'), "disallows ftp url");
   not(urlValid(' http://meta.discourse.org/'), "disallows blanks in the preceding string");

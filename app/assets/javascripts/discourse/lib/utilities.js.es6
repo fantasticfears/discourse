@@ -76,9 +76,11 @@ export function emailValid(email) {
 }
 
 export function urlValid(url) {
-  // see: https://mathiasbynens.be/demo/url-regex
-  var re = /^https?:\/\/(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i;
-  return re.test(url);
+  return validator.isURL(url, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+    allow_underscores: true
+  });
 }
 
 export function extractDomainFromUrl(url) {
