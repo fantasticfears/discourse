@@ -37,4 +37,5 @@
 //= require virtual-dom
 //= require virtual-dom-amd
 //= require highlight.js
+//= require validator.js
 //= require_tree ./discourse/ember
