@@ -190,7 +190,7 @@ const Composer = RestModel.extend({
 
   @computed('canEditTopicFeaturedLink')
   showComposerEditor(canEditTopicFeaturedLink) {
-    return canEditTopicFeaturedLink ? this.siteSettings.allow_content_with_topic_featured_link : true;
+    return canEditTopicFeaturedLink ? this.siteSettings.topic_featured_link_style === 'normal' : true;
   },
 
   // whether to disable the post button
@@ -284,7 +284,7 @@ const Composer = RestModel.extend({
   @computed('minimumPostLength', 'replyLength', 'canEditTopicFeaturedLink')
   missingReplyCharacters(minimumPostLength, replyLength, canEditTopicFeaturedLink) {
     if (this.get('post.post_type') === this.site.get('post_types.small_action')) { return 0; }
-    if (canEditTopicFeaturedLink && !this.site.get('allow_content_with_topic_featured_link')) { return 0; }
+    if (canEditTopicFeaturedLink && this.siteSettings.topic_featured_link_style !== 'normal') { return 0; }
     return minimumPostLength - replyLength;
   },
 
@@ -505,6 +505,14 @@ const Composer = RestModel.extend({
 
   save(opts) {
     if (!this.get('cantSubmitPost')) {
+
+      // change category may result in some effect for topic featured link
+      if (this.get('canEditTopicFeaturedLink')) {
+        if (this.siteSettings.topic_featured_link_style !== 'normal') { this.set('reply', null); }
+      } else {
+        this.set('featuredLink', null);
+      }
+
       return this.get('editingPost') ? this.editPost(opts) : this.createPost(opts);
     }
   },
@@ -525,7 +533,8 @@ const Composer = RestModel.extend({
       stagedPost: false,
       typingTime: 0,
       composerOpened: null,
-      composerTotalOpened: 0
+      composerTotalOpened: 0,
+      featuredLink: null
     });
   },
 
@@ -620,10 +629,6 @@ const Composer = RestModel.extend({
       typingTime: this.get('typingTime'),
       composerTime: this.get('composerTime')
     });
-
-    if (this.get('featuredLink') && !this.get('canEditTopicFeaturedLink')) {
-      this.set('featuredLink', null);
-    }
 
     this.serialize(_create_serializer, createdPost);
 

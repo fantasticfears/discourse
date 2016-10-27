@@ -30,9 +30,7 @@ class Validators::PostValidator < ActiveModel::Validator
   end
 
   def post_body_validator(post)
-    if post.raw.blank?
-      return if !SiteSetting.allow_content_with_topic_featured_link || Guardian.new.topic_featured_link_allowed_category_ids.include?(post&.topic&.category_id)
-    end
+    return if SiteSetting.topic_featured_link_style != 'normal' || Guardian.new.topic_featured_link_allowed_category_ids.include?(post&.topic&.category_id)
     stripped_length(post)
     raw_quality(post)
   end

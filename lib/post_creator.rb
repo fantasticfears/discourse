@@ -366,6 +366,9 @@ class PostCreator
 
   def setup_post
     @opts[:raw] = TextCleaner.normalize_whitespaces(@opts[:raw] || '').gsub(/\s+\z/, "")
+    if SiteSetting.topic_featured_link_enabled && SiteSetting.topic_featured_link_style == 'onebox'
+      @opts[:raw] = DiscourseFeaturedLink.cache_onebox_link(@opts[:featured_link])
+    end
 
     post = Post.new(raw: @opts[:raw],
                     topic_id: @topic.try(:id),
@@ -429,7 +432,6 @@ class PostCreator
   end
 
   def extract_links
-    TopicLink.import_featured_link(@post) if @post.is_first_post?
     TopicLink.extract_from(@post)
     QuotedPost.extract_from(@post)
   end

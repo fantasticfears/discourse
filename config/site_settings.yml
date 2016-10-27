@@ -436,9 +436,14 @@ posting:
   topic_featured_link_enabled:
     client: true
     default: false
-  allow_content_with_topic_featured_link:
+  topic_featured_link_style:
     client: true
-    default: true
+    type: enum
+    default: 'normal'
+    choices:
+      - normal
+      - link_only
+      - onebox
   open_topic_featured_link_in_external_window:
     client: true
     default: true

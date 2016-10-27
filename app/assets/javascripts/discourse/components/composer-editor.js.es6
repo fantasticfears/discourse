@@ -14,7 +14,7 @@ import { tinyAvatar,
 
 export default Ember.Component.extend({
   classNames: ['wmd-controls'],
-  classNameBindings: ['showToolbar:toolbar-visible', ':wmd-controls', 'showPreview', 'showPreview::hide-preview', 'composer.showComposerEditor::hidden'],
+  classNameBindings: ['showToolbar:toolbar-visible', ':wmd-controls', 'showPreview', 'showPreview::hide-preview'],
 
   uploadProgress: 0,
   showPreview: true,

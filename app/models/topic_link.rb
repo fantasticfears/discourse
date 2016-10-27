@@ -1,6 +1,5 @@
 require 'uri'
 require_dependency 'slug'
-require_dependency 'discourse_featured_link'
 
 class TopicLink < ActiveRecord::Base
 
@@ -99,21 +98,6 @@ SQL
                             title: l.title,
                             internal: l.internal,
                             reflection: l.reflection}
-    end
-  end
-
-  def self.import_featured_link(post)
-    return unless post.present? && post.is_first_post?
-
-    link = post.topic.custom_fields[DiscourseFeaturedLink::CUSTOM_FIELD_NAME]
-
-    if link
-      parsed = URI.parse(link)
-      TopicLink.create!(post_id: post.id,
-                        user_id: post.user_id,
-                        topic_id: post.topic_id,
-                        url: link,
-                        domain: parsed.host || Discourse.current_hostname)
     end
   end
 

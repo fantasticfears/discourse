@@ -29,7 +29,6 @@ class TopicCreator
       topic.errors[:base] << I18n.t("tags.staff_tag_disallowed", tag: staff_only.join(" "))
     end
 
-
     DiscourseEvent.trigger(:after_validate_topic, topic, self)
     valid &&= topic.errors.empty?
 

@@ -18,4 +18,10 @@ module DiscourseFeaturedLink
                                    .where("topic_custom_fields.created_at <= ?", report.start_date)
                                    .count
   end
+
+  def self.cache_onebox_link(link)
+    # If the link is pasted swiftly, onebox may not have time to cache it
+    Oneboxer.onebox(link, invalidate_oneboxes: false)
+    link
+  end
 end
