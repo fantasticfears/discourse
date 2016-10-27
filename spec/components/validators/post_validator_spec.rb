@@ -10,7 +10,7 @@ describe Validators::PostValidator do
       post.raw = ""
       validator.post_body_validator(post)
       expect(post.errors.count).to eq(2)
-      expect(post.errors[:raw]).to include(I18n.t('errors.messages.blank'))
+      expect(post.errors[:raw]).to include(I18n.t('errors.messages.too_short', count: SiteSetting.min_post_length))
       expect(post.errors[:raw]).to include(I18n.t(:is_invalid))
     end
 
@@ -23,33 +23,17 @@ describe Validators::PostValidator do
   end
 
   context "stripped_length" do
-    it "adds an error for empty raw" do
-      post.raw = ""
-      validator.stripped_length(post)
-      expect(post.errors.count).to eq(1)
-      expect(post.errors[:raw]).to eq(I18n.t('errors.messages.blank'))
-    end
-
     it "adds an error for short raw" do
       post.raw = "abc"
       validator.stripped_length(post)
       expect(post.errors.count).to eq(1)
-      expect(post.errors[:raw]).to eq(I18n.t('errors.messages.too_short'))
     end
 
-    it "adds no error for normal raw" do
+    it "adds no error for long raw" do
       post.raw = "this is a long topic body testing 123"
       validator.stripped_length(post)
       expect(post.errors.count).to eq(0)
     end
-
-    it "adds an error for long raw" do
-      post.raw = "aa" * SiteSetting.max_post_length
-      validator.stripped_length(post)
-      expect(post.errors.count).to eq(1)
-      expect(post.errors[:raw]).to eq(I18n.t('errors.messages.too_long_validation'))
-    end
-
   end
 
   context "too_many_posts" do
