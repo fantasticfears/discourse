@@ -109,7 +109,7 @@ export function setup(helper) {
 
       const result = ["div", attributes],
       poll = ["div"];
-
+      console.log(result);
       // 1 - POLL CONTAINER
       const container = ["div", { "class": "poll-container" }].concat(contents);
       poll.push(container);
