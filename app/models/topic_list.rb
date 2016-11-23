@@ -27,6 +27,7 @@ class TopicList
     end
 
     preloaded_custom_fields << DiscourseTagging::TAGS_FIELD_NAME if SiteSetting.tagging_enabled
+    preloaded_custom_fields << 'featured_link' if SiteSetting.topic_featured_link_enabled
   end
 
   def tags

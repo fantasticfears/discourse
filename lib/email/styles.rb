@@ -67,6 +67,11 @@ module Email
         add_styles(img, 'max-width: 100%;') if img['style'] !~ /max-width/
       end
 
+      # topic featured link
+      @fragment.css("a.topic-featured-link").each do |e|
+        e['style'] = "color:#737373;padding:4px 10px;border:1px solid #e6e6e6;border-radius:2px;box-shadow:0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);"
+      end
+
       # attachments
       @fragment.css('a.attachment').each do |a|
         # ensure all urls are absolute

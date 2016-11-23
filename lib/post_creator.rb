@@ -429,6 +429,7 @@ class PostCreator
   end
 
   def extract_links
+    TopicLink.import_featured_link(@post) if @post.is_first_post?
     TopicLink.extract_from(@post)
     QuotedPost.extract_from(@post)
   end

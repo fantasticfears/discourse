@@ -1,3 +1,5 @@
+require_dependency 'discourse_featured_link'
+
 class PostRevisionSerializer < ApplicationSerializer
 
   attributes :created_at,
@@ -191,6 +193,10 @@ class PostRevisionSerializer < ApplicationSerializer
         if topic.respond_to?(field)
           latest_modifications[field.to_s] = [topic.send(field)]
         end
+      end
+
+      if SiteSetting.topic_featured_link_enabled
+        latest_modifications["featured_link"] = [post.topic.custom_fields[DiscourseFeaturedLink::CUSTOM_FIELD_NAME]]
       end
 
       if SiteSetting.tagging_enabled
