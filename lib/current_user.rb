@@ -16,6 +16,8 @@ module CurrentUser
 
   def log_on_user(user)
     current_user_provider.log_on_user(user,session,cookies)
+
+    DiscourseEvent.trigger(:user_logined, user)
   end
 
   def log_off_user
