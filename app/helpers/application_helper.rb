@@ -280,4 +280,11 @@ module ApplicationHelper
     result.html_safe
   end
 
+  def topic_featured_link_domain(link)
+    uri = URI.encode(link)
+    uri = URI.parse(uri)
+    uri = URI.parse("http://#{uri}") if uri.scheme.nil?
+    host = uri.host.downcase
+    host.start_with?('www.') ? host[4..-1] : host
+  end
 end

@@ -10,8 +10,7 @@ class Validators::PostValidator < ActiveModel::Validator
     return if record.acting_user.try(:staged?)
     return if record.acting_user.try(:admin?) && Discourse.static_doc_topic_ids.include?(record.topic_id)
 
-    stripped_length(record)
-    raw_quality(record)
+    post_body_validator(record)
     max_posts_validator(record)
     max_mention_validator(record)
     max_images_validator(record)
@@ -21,8 +20,6 @@ class Validators::PostValidator < ActiveModel::Validator
   end
 
   def presence(post)
-    post.errors.add(:raw, :blank, options) if post.raw.blank?
-
     unless options[:skip_topic]
       post.errors.add(:topic_id, :blank, options) if post.topic_id.blank?
     end
@@ -30,6 +27,14 @@ class Validators::PostValidator < ActiveModel::Validator
     if post.new_record? and post.user_id.nil?
       post.errors.add(:user_id, :blank, options)
     end
+  end
+
+  def post_body_validator(post)
+    if post.raw.blank?
+      return if !SiteSetting.allow_content_with_topic_featured_link || Guardian.new.topic_featured_link_allowed_category_ids.include?(post&.topic&.category_id)
+    end
+    stripped_length(post)
+    raw_quality(post)
   end
 
   def stripped_length(post)
