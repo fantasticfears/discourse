@@ -5,6 +5,23 @@ describe Validators::PostValidator do
   let(:post) { build(:post) }
   let(:validator) { Validators::PostValidator.new({}) }
 
+  context "post body validation" do
+    it "adds errors for empty raw" do
+      post.raw = ""
+      validator.post_body_validator(post)
+      expect(post.errors.count).to eq(2)
+      expect(post.errors[:raw]).to include(I18n.t('errors.messages.too_short', count: SiteSetting.min_post_length))
+      expect(post.errors[:raw]).to include(I18n.t(:is_invalid))
+    end
+
+    it "should be allowed for empty raw based on site setting" do
+      SiteSetting.topic_featured_link_style = 'link_only'
+      post.raw = ""
+      validator.post_body_validator(post)
+      expect(post.errors).to be_empty
+    end
+  end
+
   context "stripped_length" do
     it "adds an error for short raw" do
       post.raw = "abc"

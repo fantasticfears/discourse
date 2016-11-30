@@ -32,13 +32,15 @@ const CLOSED = 'closed',
         target_usernames: 'targetUsernames',
         typing_duration_msecs: 'typingTime',
         composer_open_duration_msecs: 'composerTime',
-        tags: 'tags'
+        tags: 'tags',
+        featured_link: 'featuredLink'
       },
 
       _edit_topic_serializer = {
         title: 'topic.title',
         categoryId: 'topic.category.id',
-        tags: 'topic.tags'
+        tags: 'topic.tags',
+        featuredLink: 'topic.featured_link'
       };
 
 const Composer = RestModel.extend({
@@ -48,7 +50,6 @@ const Composer = RestModel.extend({
   archetypes: function() {
     return this.site.get('archetypes');
   }.property(),
-
 
   @computed
   categoryId: {
@@ -92,7 +93,6 @@ const Composer = RestModel.extend({
   viewOpen: Em.computed.equal('composeState', OPEN),
   viewDraft: Em.computed.equal('composeState', DRAFT),
 
-
   composeStateChanged: function() {
     var oldOpen = this.get('composerOpened');
 
@@ -135,6 +135,14 @@ const Composer = RestModel.extend({
   editingFirstPost: Em.computed.and('editingPost', 'post.firstPost'),
   canEditTitle: Em.computed.or('creatingTopic', 'creatingPrivateMessage', 'editingFirstPost'),
   canCategorize: Em.computed.and('canEditTitle', 'notCreatingPrivateMessage'),
+
+  @computed('canEditTitle', 'creatingPrivateMessage', 'categoryId')
+  canEditTopicFeaturedLink(canEditTitle, creatingPrivateMessage, categoryId) {
+    if (!this.siteSettings.topic_featured_link_enabled || !canEditTitle || creatingPrivateMessage) { return false; }
+
+    const categoryIds = this.site.get('topic_featured_link_allowed_category_ids');
+    return categoryIds === undefined || !categoryIds.length || categoryIds.indexOf(categoryId) !== -1;
+  },
 
   // Determine the appropriate title for this action
   actionTitle: function() {
@@ -180,6 +188,10 @@ const Composer = RestModel.extend({
 
   }.property('action', 'post', 'topic', 'topic.title'),
 
+  @computed('canEditTopicFeaturedLink')
+  showComposerEditor(canEditTopicFeaturedLink) {
+    return canEditTopicFeaturedLink ? this.siteSettings.topic_featured_link_style === 'normal' : true;
+  },
 
   // whether to disable the post button
   cantSubmitPost: function() {
@@ -201,9 +213,9 @@ const Composer = RestModel.extend({
     } else {
       // has a category? (when needed)
       return this.get('canCategorize') &&
-            !this.siteSettings.allow_uncategorized_topics &&
-            !this.get('categoryId') &&
-            !this.user.get('admin');
+        !this.siteSettings.allow_uncategorized_topics &&
+        !this.get('categoryId') &&
+        !this.user.get('admin');
     }
   }.property('loading', 'canEditTitle', 'titleLength', 'targetUsernames', 'replyLength', 'categoryId', 'missingReplyCharacters'),
 
@@ -269,11 +281,12 @@ const Composer = RestModel.extend({
     }
   }.property('privateMessage'),
 
-  missingReplyCharacters: function() {
-    const postType = this.get('post.post_type');
-    if (postType === this.site.get('post_types.small_action')) { return 0; }
-    return this.get('minimumPostLength') - this.get('replyLength');
-  }.property('minimumPostLength', 'replyLength'),
+  @computed('minimumPostLength', 'replyLength', 'canEditTopicFeaturedLink')
+  missingReplyCharacters(minimumPostLength, replyLength, canEditTopicFeaturedLink) {
+    if (this.get('post.post_type') === this.site.get('post_types.small_action')) { return 0; }
+    if (canEditTopicFeaturedLink && this.siteSettings.topic_featured_link_style !== 'normal') { return 0; }
+    return minimumPostLength - replyLength;
+  },
 
   /**
     Minimum number of characters for a post body to be valid.
@@ -492,6 +505,14 @@ const Composer = RestModel.extend({
 
   save(opts) {
     if (!this.get('cantSubmitPost')) {
+
+      // change category may result in some effect for topic featured link
+      if (this.get('canEditTopicFeaturedLink')) {
+        if (this.siteSettings.topic_featured_link_style !== 'normal') { this.set('reply', null); }
+      } else {
+        this.set('featuredLink', null);
+      }
+
       return this.get('editingPost') ? this.editPost(opts) : this.createPost(opts);
     }
   },
@@ -512,7 +533,8 @@ const Composer = RestModel.extend({
       stagedPost: false,
       typingTime: 0,
       composerOpened: null,
-      composerTotalOpened: 0
+      composerTotalOpened: 0,
+      featuredLink: null
     });
   },
 

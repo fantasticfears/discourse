@@ -124,6 +124,8 @@ class TopicCreator
     topic_params[:pinned_at] = Time.zone.parse(@opts[:pinned_at].to_s) if @opts[:pinned_at].present?
     topic_params[:pinned_globally] = @opts[:pinned_globally] if @opts[:pinned_globally].present?
 
+    topic_params[:featured_link] = @opts[:featured_link] if SiteSetting.topic_featured_link_enabled && @opts[:featured_link].present?
+
     topic_params
   end
 
