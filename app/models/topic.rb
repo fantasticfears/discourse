@@ -129,6 +129,8 @@ class Topic < ActiveRecord::Base
   attr_accessor :meta_data
   attr_accessor :include_last_poster
   attr_accessor :import_mode # set to true to optimize creation and save for imports
+  attr_accessor :previewed_post
+  attr_accessor :previewed_post_actions
 
   # The regular order
   scope :topic_list_order, -> { order('topics.bumped_at desc') }

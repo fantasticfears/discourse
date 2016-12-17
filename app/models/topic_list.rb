@@ -99,6 +99,35 @@ class TopicList
       Topic.preload_custom_fields(@topics, preloaded_custom_fields)
     end
 
+    accepted_anwser_post_ids = @topics.map { |t| t.custom_fields["accepted_answer_post_id"]&.to_i }.compact
+    # With postgresql 9.4+
+    posts = Post.all.joins("JOIN unnest('{#{accepted_anwser_post_ids.join(',')}}'::int[]) WITH ORDINALITY t(id, ord) USING (id)").order("t.ord")
+    idx = 0
+    @topics.each do |t|
+      next unless t.custom_fields["accepted_answer_post_id"]
+      t.previewed_post = posts[idx]
+      idx += 1
+    end
+    normal_topic_ids = topics.delete_if { |t| t.custom_fields["accepted_answer_post_id"]&.to_i }.map(&:id)
+    posts = Post.where("post_number = 1 AND topic_id IN (?)", normal_topic_ids).joins("JOIN unnest('{#{normal_topic_ids.join(',')}}'::int[]) WITH ORDINALITY t(topic_id, ord) USING (topic_id)").order("t.ord")
+    idx = 0
+    @topics.each do |t|
+      next if t.custom_fields["accepted_answer_post_id"]
+      t.previewed_post = posts[idx]
+      idx += 1
+    end
+
+    if @current_user
+      previewed_post_ids = @topics.map { |t| t.previewed_post.id }
+      post_actions_map = {}
+      PostAction.where("post_id IN (?) AND user_id = ?", previewed_post_ids, @current_user.id).each do |pa|
+        (post_actions_map[pa.post_id] ||= []) << pa
+      end
+      @topics.each do |t|
+        t.previewed_post_actions = post_actions_map[t.previewed_post.id]
+      end
+    end
+
     @topics
   end
 
