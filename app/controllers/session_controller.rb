@@ -4,7 +4,7 @@ require_dependency 'single_sign_on'
 class SessionController < ApplicationController
 
   skip_before_filter :redirect_to_login_if_required
-  skip_before_filter :preload_json, :check_xhr, only: ['sso', 'sso_login', 'become', 'sso_provider', 'destroy']
+  skip_before_filter :preload_json, :check_xhr, only: ['sso', 'sso_login', 'become', 'sso_provider', 'destroy', 'token_login_page', 'token_login']
 
   ACTIVATE_USER_KEY = "activate_user"
 
@@ -229,6 +229,63 @@ class SessionController < ApplicationController
     end
 
     (user.active && user.email_confirmed?) ? login(user) : not_activated(user)
+  end
+
+  def token_login_page
+    expires_now
+
+    token = params[:token]
+
+    if EmailToken.valid_token_format?(token)
+      @user = EmailToken.confirmable(token)&.user
+      if @user
+        secure_session["password-#{token}"] = @user.id
+      end
+    end
+
+    if !@user
+      @error = I18n.t('token_login.invalid_token')
+    end
+
+    if @error
+      render :token_login, layout: 'no_ember'
+    else
+      store_preloaded("token_login", MultiJson.dump({ is_developer: UsernameCheckerService.is_developer?(@user.email) }))
+      render :token_login
+    end
+  end
+
+  def token_login
+    unless allow_local_auth?
+      render nothing: true, status: 500
+      return
+    end
+
+    params.require(:token)
+
+    if EmailToken.valid_token_format?(params[:token])
+      user = EmailToken.confirm(params[:token])
+      user_id = secure_session["password-#{token}"].to_i
+      user = User.find(user_id) if !user && user_id > 0
+
+      return invalid_credentials unless user
+
+      return login_not_approved if login_not_approved_for?(user)
+
+      Invite.invalidate_for_email(user.email)
+
+      return failed_to_login(user) if user.suspended?
+
+      return not_allowed_from_ip_address(user) if ScreenedIpAddress.should_block?(request.remote_ip)
+
+      return admin_not_allowed_from_ip_address(user) if ScreenedIpAddress.block_admin_login?(user, request.remote_ip)
+
+      login(user)
+      render json: {
+        success: true,
+        redirect_to: root_path
+      }
+    end
   end
 
   def forgot_password

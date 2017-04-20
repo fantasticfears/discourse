@@ -61,6 +61,7 @@ export default function() {
     this.route('edit');
   });
 
+  this.route('token-login', { path: '/session/token-login/:token' });
   // User routes
   this.route('users', { resetNamespace: true, path: '/u' });
   this.route('password-reset', { path: '/u/password-reset/:token' });

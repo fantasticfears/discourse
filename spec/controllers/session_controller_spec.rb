@@ -757,6 +757,105 @@ describe SessionController do
     end
   end
 
+  describe '.token_login' do
+    let(:user) { Fabricate(:user) }
+
+    context 'local logins disabled' do
+      it 'fails' do
+        SiteSetting.enable_local_logins =false
+        get :token_login, token: SecureRandom.hex
+        expect(response.status.to_i).to eq(500)
+      end
+    end
+
+    context 'missing token' do
+      before do
+        get :token_login
+      end
+
+      it 'disallows login' do
+        expect(assigns[:error]).to be_present
+        expect(session[:current_user_id]).to be_blank
+        expect(response).to be_success
+        expect(response).to render_template(layout: 'no_ember')
+      end
+    end
+
+    context 'invalid token' do
+      before do
+        get :token_login, token: "evil_trout!"
+      end
+
+      it 'disallows login' do
+        expect(assigns[:error]).to be_present
+        expect(session[:current_user_id]).to be_blank
+        expect(response).to be_success
+        expect(response).to render_template(layout: 'no_ember')
+      end
+    end
+
+    context 'valid token' do
+      context 'when rendered' do
+        render_views
+
+        it 'renders referrer never on get requests' do
+          token = user.email_tokens.create(email: user.email).token
+          get :token_login, token: token
+
+          expect(response.body).to include('<meta name="referrer" content="never">')
+        end
+      end
+
+      it 'returns success' do
+        user_auth_token = UserAuthToken.generate!(user_id: user.id)
+        token = user.email_tokens.create(email: user.email).token
+
+        get :token_login, token: token
+        expect(response).to be_success
+        expect(assigns[:error]).to be_blank
+
+        user.reload
+
+        expect(session[:current_user_id]).to eq(user.id)
+        expect(UserAuthToken.where(id: user_auth_token.id).count).to eq(0)
+      end
+
+      it 'fails when double token login' do
+        token = user.email_tokens.create(email: user.email).token
+
+        get :token_login, token: token
+        get :token_login, token: token
+
+        user.reload
+
+        expect(assigns[:error]).to be_present
+        expect(session[:current_user_id]).to user.id
+        expect(response).to be_success
+        expect(response).to render_template(layout: 'no_ember')
+      end
+    end
+
+    context 'submit change' do
+      let(:token) { EmailToken.generate_token }
+      before do
+        EmailToken.expects(:confirm).with(token).returns(user)
+      end
+
+      it "logs in the user" do
+        get :token_login, token: token
+        expect(assigns(:user).errors).to be_blank
+        expect(session[:current_user_id]).to be_present
+      end
+
+      it "doesn't log in the user when not approved" do
+        SiteSetting.must_approve_users = true
+        get :token_login
+        expect(assigns(:user).errors).to be_blank
+        expect(session[:current_user_id]).to be_blank
+      end
+    end
+  end
+
   describe '.current' do
     context "when not logged in" do
       it "retuns 404" do

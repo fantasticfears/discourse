@@ -62,6 +62,7 @@ module Jobs
       confirm_new_email
       confirm_old_email
       forgot_password
+      email_login
       notify_old_email
       signup
       signup_after_approval
