@@ -290,7 +290,6 @@ GEM
     redis-namespace (1.5.3)
       redis (~> 3.0, >= 3.0.4)
     rinku (2.0.2)
-    rmmseg-cpp (0.2.9)
     rspec (3.6.0)
       rspec-core (~> 3.6.0)
       rspec-expectations (~> 3.6.0)
@@ -464,7 +463,6 @@ DEPENDENCIES
   redis
   redis-namespace
   rinku
-  rmmseg-cpp
   rspec
   rspec-html-matchers
   rspec-rails

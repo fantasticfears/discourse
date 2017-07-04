@@ -185,8 +185,6 @@ gem 'simple-rss', require: false
 gem 'stackprof', require: false, platform: :mri
 gem 'memory_profiler', require: false, platform: :mri
 
-gem 'rmmseg-cpp', require: false
-
 gem 'logster'
 
 gem 'sassc', require: false
