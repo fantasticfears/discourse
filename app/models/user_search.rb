@@ -42,16 +42,21 @@ class UserSearch
     users.limit(@limit)
   end
 
+  def prepare_term
+    term = Search.prepare_data(@term)
+    @query ||= Search.ts_query(term, Search.ts_config)
+  end
+
   def filtered_by_term_users
     users = scoped_users
 
     if @term.present?
       if SiteSetting.enable_names? && @term !~ /[_\.-]/
-        query = Search.ts_query(@term, "simple")
+        prepare_term if @query.nil?
 
         users = users.includes(:user_search_data)
                      .references(:user_search_data)
-                     .where("user_search_data.search_data @@ #{query}")
+                     .where("user_search_data.search_data @@ #{@query}")
                      .order(User.sql_fragment("CASE WHEN username_lower LIKE ? THEN 0 ELSE 1 END ASC", @term_like))
 
       else

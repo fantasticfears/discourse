@@ -12,6 +12,7 @@ describe UserSearch do
   let(:user4)     { Fabricate :user, username: "mrpink",   name: "Steve Buscemi",  last_seen_at: 7.days.ago }
   let(:user5)     { Fabricate :user, username: "mrbrown",  name: "Quentin Tarantino", last_seen_at: 6.days.ago }
   let(:user6)     { Fabricate :user, username: "mrwhite",  name: "Harvey Keitel",  last_seen_at: 5.days.ago }
+
   let!(:inactive) { Fabricate :user, username: "Ghost", active: false }
   let(:admin)     { Fabricate :admin, username: "theadmin" }
   let(:moderator) { Fabricate :moderator, username: "themod" }
@@ -51,6 +52,13 @@ describe UserSearch do
 
     results = search_for("sam", group: group)
     expect(results.count).to eq(1)
+  end
+
+  it 'takes into account of Unicode' do
+    SiteSetting.default_locale = 'fr'
+    Fabricate :user, name: "Béatrice"
+    results = search_for("Béatrice")
+    expect(results.size).to eq(1)
   end
 
   # this is a seriously expensive integration test,
@@ -112,7 +120,7 @@ describe UserSearch do
     results = search_for("Tarantino")
     expect(results.size).to eq(1)
 
-    results = search_for("coding")
+    results = search_for("cede")
     expect(results.size).to eq(0)
 
     results = search_for("z")

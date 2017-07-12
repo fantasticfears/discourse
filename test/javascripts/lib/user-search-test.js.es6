@@ -44,6 +44,11 @@ QUnit.module("lib:user-search", {
               "username": "dzsat_team",
               "name": "Dz Sat Dz Sat",
               "avatar_template": "https://avatars.discourse.org/v3/letter/d/eb9ed0/{size}.png"
+            },
+            {
+              "username": "not_relevant",
+              "name": "Béatrice",
+              "avatar_template": "https://avatars.discourse.org/v3/letter/n/eb9ed0/{size}.png"
             }
           ],
           groups: [
@@ -60,5 +65,12 @@ QUnit.module("lib:user-search", {
 QUnit.test("it places groups unconditionally for exact match", assert => {
   return userSearch({term: 'Team'}).then((results)=>{
      assert.equal(results[results.length-1]["name"], "team");
+  });
+});
+
+
+QUnit.test("it searches user's name", assert => {
+  return userSearch({term: 'Béa'}).then((results)=>{
+    assert.equal(results[results.length-1]["name"], "Béatrice");
   });
 });
