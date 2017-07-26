@@ -77,19 +77,13 @@ class Search
 
   def self.prepare_data(search_data)
     data = search_data.squish
-    # TODO rmmseg is designed for chinese, we need something else for Korean / Japanese
+    # TODO cppjieba_rb is designed for chinese, we need something else for Korean / Japanese
     if ['zh_TW', 'zh_CN', 'ja', 'ko'].include?(SiteSetting.default_locale) || SiteSetting.search_tokenize_chinese_japanese_korean
-      unless defined? RMMSeg
-        require 'rmmseg'
-        RMMSeg::Dictionary.load_dictionaries
+      unless defined? CppjiebaRb
+        require 'cppjieba_rb'
       end
 
-      algo = RMMSeg::Algorithm.new(search_data)
-
-      data = ""
-      while token = algo.next_token
-        data << token.text << " "
-      end
+      data = CppjiebaRb.segment(search_data)
     end
 
     data.force_encoding("UTF-8")
