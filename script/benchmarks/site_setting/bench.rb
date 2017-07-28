@@ -31,7 +31,6 @@ Benchmark.ips do |x|
   end
 end
 
-
 # 28-07-2017 - Erick's Site Setting change
 
 # Before
@@ -40,7 +39,6 @@ end
 # change default locale with current cache refreshed
 # 181.503  (± 5.0%) i/s -    918.000  in   5.071343s
 # change site setting    172.146  (± 4.1%) i/s -    864.000  in   5.028832s
-
 
 # After
 # Calculating -------------------------------------
