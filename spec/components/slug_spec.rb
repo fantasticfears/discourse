@@ -129,6 +129,10 @@ describe Slug do
     it "keeps number unchanged" do
       expect(Slug.encoded_generator('123')).to eq('123')
     end
+
+    it 'eliminates trailing dashes' do
+      expect(Slug.encoded_generator('Should be take cared -! -')).to eq('should-be-take-cared')
+    end
   end
 
   describe '#none_generator' do

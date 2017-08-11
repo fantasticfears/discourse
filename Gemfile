@@ -52,6 +52,7 @@ gem 'ember-rails', '0.18.5'
 gem 'ember-source'
 gem 'ember-handlebars-template', '0.7.5'
 gem 'barber'
+gem 'icu', '0.10.0'
 
 gem 'message_bus'
 

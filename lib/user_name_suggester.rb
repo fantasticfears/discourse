@@ -1,3 +1,5 @@
+require_dependency 'unicode'
+
 module UserNameSuggester
   GENERIC_NAMES = ['i', 'me', 'info', 'support', 'admin', 'webmaster', 'hello', 'mail', 'office', 'contact', 'team']
 
@@ -39,7 +41,7 @@ module UserNameSuggester
   end
 
   def self.sanitize_username(name)
-    name = ActiveSupport::Inflector.transliterate(name)
+    name = Unicode.transliterate(name)
     # 1. replace characters that aren't allowed with '_'
     name.gsub!(UsernameValidator::CONFUSING_EXTENSIONS, "_")
     name.gsub!(/[^\w.-]/, "_")
