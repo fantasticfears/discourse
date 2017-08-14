@@ -185,6 +185,7 @@ gem 'cppjieba_rb', require: false
 gem 'logster'
 
 gem 'sassc', require: false
+gem 'icu', '~> 0.10.2'
 
 if ENV["IMPORT"] == "1"
   gem 'mysql2'

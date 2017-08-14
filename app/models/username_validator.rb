@@ -65,6 +65,24 @@ class UsernameValidator
 
   def username_char_valid?
     return unless errors.empty?
+    if SiteSetting.allow_unicode_username
+      username_unicode_valid?
+    else
+      username_in_limited_ascii_valid?
+      username_first_char_valid?
+      username_last_char_valid?
+    end
+  end
+
+  def username_unicode_valid?
+    return unless errors.empty?
+    unless I18nKit.spoof_check(username)
+      self.errors << I18n.t(:'user.username.unicode_characters')
+    end
+  end
+
+  def username_in_limited_ascii_valid?
+    return unless errors.empty?
     if username =~ /[^\w.-]/
       self.errors << I18n.t(:'user.username.characters')
     end

@@ -331,6 +331,9 @@ login:
     max: 175200
 
 users:
+  allow_unicode_username:
+    client: true
+    default: false
   min_username_length:
     client: true
     default: 3
