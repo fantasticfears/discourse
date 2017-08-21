@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 module Slug
-  CHAR_FILTER_REGEXP = /[:\/\?#\[\]@!\$&'\(\)\*\+,;=_\.~%\\`^\s|\{\}"<>]+/ # :/?#[]@!$&'()*+,;=_.~%\`^|{}"<>
+  CHAR_FILTER_REGEXP = /[:\/\?#\[\]@!\$&'\(\)\*\+,;=_\.~\\`^\s|\{\}"<>]+/ # :/?#[]@!$&'()*+,;=_.~\`^|{}"<>
 
   def self.for(string, fallback: 'topic')
     slug =
@@ -16,11 +16,8 @@ module Slug
   end
 
   def self.sanitize(string)
-    encoded_generator(string)
+    encoded_generator(string, downcase: false)
   end
-
-  nonascii = (0x80..0xff).collect { |c| c.chr }.join
-  NONASCII = /([#{Regexp.escape(nonascii)}])/n
 
   private
 
@@ -36,7 +33,7 @@ module Slug
       .tr("_", "-")
   end
 
-  def self.encoded_generator(string)
+  def self.encoded_generator(string, downcase: true)
     # This generator will sanitize almost all special characters,
     # including reserved characters from RFC3986.
     # See also URI::REGEXP::PATTERN.
@@ -45,19 +42,16 @@ module Slug
       .gsub(CHAR_FILTER_REGEXP, '')
       .squeeze('-') # squeeze continuous dashes to prettify slug
       .gsub(/\A-+|-+\z/, '') # remove possible trailing and preceding dashes
-      .downcase
-    self.escape_to_ascii(string)
+    string = string.downcase if downcase
+    self.percent_encode(string)
   end
 
   def self.none_generator(string)
     ''
   end
 
-  def self.escape_to_ascii(str)
-    str = str.b
-    str.gsub!(NONASCII) { "%%%02X" % $1.ord }
-    str = str.encode(Encoding::UTF_8)
-    str
+  def self.percent_encode(str)
+    URI.escape(str.encode("UTF-8")).to_s
   end
 
   def self.fallback_if_too_long(string)

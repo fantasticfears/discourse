@@ -126,11 +126,12 @@ describe Slug do
       expect(Slug.encoded_generator("뉴스피드")).to eq("%EB%89%B4%EC%8A%A4%ED%94%BC%EB%93%9C")
       expect(Slug.encoded_generator("آموزش اضافه کردن لینک اختیاری به هدر")).to eq("%D8%A2%D9%85%D9%88%D8%B2%D8%B4-%D8%A7%D8%B6%D8%A7%D9%81%D9%87-%DA%A9%D8%B1%D8%AF%D9%86-%D9%84%DB%8C%D9%86%DA%A9-%D8%A7%D8%AE%D8%AA%DB%8C%D8%A7%D8%B1%DB%8C-%D8%A8%D9%87-%D9%87%D8%AF%D8%B1")
       expect(Slug.encoded_generator("熱帶風暴畫眉")).to eq("%E7%86%B1%E5%B8%B6%E9%A2%A8%E6%9A%B4%E7%95%AB%E7%9C%89")
+      expect(Slug.encoded_generator("我们%时光")).to eq("%E6%88%91%E4%BB%AC%25%E6%97%B6%E5%85%89")
     end
 
     it 'reject RFC 3986 reserved character and blank' do
-      expect(Slug.encoded_generator(":/?#[]@!$ &'()*+,;=% -_`~.")).to eq("")
-      expect(Slug.encoded_generator(" - English and Chinese title with special characters / 中文标题 !@:?\\:'`#^& $%&*()` -- ")).to eq("english-and-chinese-title-with-special-characters-%E4%B8%AD%E6%96%87%E6%A0%87%E9%A2%98")
+      expect(Slug.encoded_generator(":/?#[]@!$ &'()*+,;= -_`~.")).to eq("")
+      expect(Slug.encoded_generator(" - English and Chinese title with special characters / 中文标题 !@:?\\:'`#^& $&*()` -- ")).to eq("english-and-chinese-title-with-special-characters-%E4%B8%AD%E6%96%87%E6%A0%87%E9%A2%98")
     end
 
     it 'generates null when nothing' do

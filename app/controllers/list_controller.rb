@@ -300,9 +300,18 @@ class ListController < ApplicationController
     route_params
   end
 
+  def prepare_slug_or_id(sym)
+    slug_or_id = params[sym]
+    if slug_or_id =~ /\d+/
+      slug_or_id
+    else
+      Slug.sanitize((slug_or_id || '').force_encoding('UTF-8'))
+    end
+  end
+
   def set_category
-    slug_or_id = params.fetch(:category)
-    parent_slug_or_id = params[:parent_category]
+    slug_or_id = prepare_slug_or_id(:category)
+    parent_slug_or_id = prepare_slug_or_id(:parent_category)
     id = params[:id].to_i
 
     parent_category_id = nil

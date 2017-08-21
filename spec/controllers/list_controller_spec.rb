@@ -138,6 +138,16 @@ describe ListController do
           it { is_expected.to redirect_to(child_category.url) }
         end
 
+        let(:encoded_slug_category) { Fabricate(:category, name: '中文', parent_category: category) }
+        context 'with a valid percent uncoded slug' do
+          before do
+            SiteSetting.slug_generation_method = 'encoded'
+            xhr :get, :category_latest, parent_category: category.slug, category: encoded_slug_category.slug, id: encoded_slug_category.id
+          end
+
+          it { is_expected.to redirect_to(encoded_slug_category.url) }
+        end
+
         context "with invalid slug" do
           before do
             xhr :get, :category_latest, parent_category: 'random slug', category: 'random slug', id: child_category.id
@@ -233,6 +243,32 @@ describe ListController do
           get :category_latest, category: category.slug
           expect(response).to be_success
           expect(css_select("link[rel=canonical]").length).to eq(1)
+        end
+      end
+    end
+
+    context 'in a slug of percent encoded category' do
+      let(:category) { Fabricate(:category, name: '中文') }
+
+      before { SiteSetting.slug_generation_method = 'encoded' }
+
+      context 'with access to see the category' do
+        before do
+          xhr :get, :category_latest, category: category.slug
+        end
+
+        it { is_expected.to respond_with(:success) }
+      end
+
+      context 'with a link that has a parent slug, slug and id in its path' do
+        let(:child_category) { Fabricate(:category, name: '子分类', parent_category: category) }
+
+        context "with valid slug" do
+          before do
+            xhr :get, :category_latest, parent_category: category.slug, category: child_category.slug, id: child_category.id
+          end
+
+          it { is_expected.to redirect_to(child_category.url) }
         end
       end
     end

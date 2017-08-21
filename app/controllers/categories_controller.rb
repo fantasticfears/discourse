@@ -198,7 +198,10 @@ class CategoriesController < ApplicationController
 
   def find_by_slug
     params.require(:category_slug)
-    @category = Category.find_by_slug(params[:category_slug], params[:parent_category_slug])
+    @category = Category.find_by_slug(
+      prepare_category_slug(:category_slug),
+      prepare_category_slug(:parent_category_slug)
+    )
     guardian.ensure_can_see!(@category)
 
     @category.permission = CategoryGroup.permission_types[:full] if Category.topic_create_allowed(guardian).where(id: @category.id).exists?
@@ -206,6 +209,11 @@ class CategoriesController < ApplicationController
   end
 
   private
+
+    def prepare_category_slug(sym)
+      slug = params[sym]
+      slug ? Slug.sanitize(slug.force_encoding('UTF-8')) : nil
+    end
 
     def required_param_keys
       [:name, :color, :text_color]

@@ -231,12 +231,13 @@ SQL
 
     self.name.strip!
 
-    if slug.present?
+    if self.slug.present?
       # santized custom slug
-      self.slug = Slug.sanitize(slug)
+      self.slug = Slug.sanitize(self.slug) if !@slug_populated
       errors.add(:slug, 'is already in use') if duplicate_slug?
     else
       # auto slug
+      @slug_populated = true
       self.slug = Slug.for(name, fallback: '')
       self.slug = '' if duplicate_slug?
     end

@@ -277,4 +277,31 @@ describe CategoriesController do
       end
     end
   end
+
+  describe '.find_by_slug' do
+    context 'logged in' do
+      before do
+        @user = log_in(:admin)
+        SiteSetting.slug_generation_method = 'encoded'
+        @category = Fabricate(:category, name: '中文Chinese', user: @user)
+        @sub_category = Fabricate(:category, name: '中文子分类Chinese Sub Category', parent_category: @category, user: @user)
+      end
+
+      # Server stack
+      context 'encoded slug generation method to make sure slug are encoded' do
+        it 'finds the category' do
+          # TODO: once Rails returns proper encoded slug (param), it should be changed.
+          rails_req = Rails.application.routes.recognize_path('/c/%E4%B8%AD%E6%96%87chinese/find_by_slug.json')
+          xhr :get, :find_by_slug, category_slug: rails_req[:category_slug]
+          expect(response).to be_success
+        end
+
+        it 'finds the category with parent category' do
+          rails_req = Rails.application.routes.recognize_path('/c/%E4%B8%AD%E6%96%87chinese/%E4%B8%AD%E6%96%87%E5%AD%90%E5%88%86%E7%B1%BBchinese-sub-category/find_by_slug.json')
+          xhr :get, :find_by_slug, category_slug: rails_req[:category_slug], parent_category_slug: rails_req[:parent_category_slug]
+          expect(response).to be_success
+        end
+      end
+    end
+  end
 end

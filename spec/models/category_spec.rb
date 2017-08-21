@@ -181,48 +181,32 @@ describe Category do
   end
 
   describe 'non-english characters' do
+    let(:category) { Fabricate(:category, name: "测试") }
+
     context 'uses ascii slug generator' do
-      before do
-        SiteSetting.slug_generation_method = 'ascii'
-        @category = Fabricate(:category, name: "测试")
-      end
-      after { @category.destroy }
+      before {  SiteSetting.slug_generation_method = 'ascii' }
 
       it "creates a blank slug" do
-        expect(@category.slug).to be_blank
-        expect(@category.slug_for_url).to eq("#{@category.id}-category")
+        expect(category.slug).to be_blank
+        expect(category.slug_for_url).to eq("#{category.id}-category")
       end
     end
 
     context 'uses none slug generator' do
-      before do
-        SiteSetting.slug_generation_method = 'none'
-        @category = Fabricate(:category, name: "测试")
-      end
-      after do
-        SiteSetting.slug_generation_method = 'ascii'
-        @category.destroy
-      end
+      before {  SiteSetting.slug_generation_method = 'none' }
 
       it "creates a blank slug" do
-        expect(@category.slug).to be_blank
-        expect(@category.slug_for_url).to eq("#{@category.id}-category")
+        expect(category.slug).to be_blank
+        expect(category.slug_for_url).to eq("#{category.id}-category")
       end
     end
 
     context 'uses encoded slug generator' do
-      before do
-        SiteSetting.slug_generation_method = 'encoded'
-        @category = Fabricate(:category, name: "测试")
-      end
-      after do
-        SiteSetting.slug_generation_method = 'ascii'
-        @category.destroy
-      end
+      before { SiteSetting.slug_generation_method = 'encoded' }
 
       it "creates a slug" do
-        expect(@category.slug).to eq("测试")
-        expect(@category.slug_for_url).to eq("测试")
+        expect(category.slug).to eq("%E6%B5%8B%E8%AF%95")
+        expect(category.slug_for_url).to eq("%E6%B5%8B%E8%AF%95")
       end
     end
   end
