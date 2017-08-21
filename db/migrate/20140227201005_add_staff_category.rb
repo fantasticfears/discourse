@@ -18,7 +18,7 @@ class AddStaffCategory < ActiveRecord::Migration
           category_id = result[0]["id"].to_i
 
           Category.exec_sql "UPDATE categories SET slug=:slug WHERE id=:category_id",
-                  slug: Slug.for(name, "#{category_id}-category"), category_id: category_id
+                  slug: Slug.for(name, fallback: "#{category_id}-category"), category_id: category_id
 
           execute "INSERT INTO site_settings(name, data_type, value, created_at, updated_at)
                    VALUES ('staff_category_id', 3, #{category_id.to_i}, now(), now())"

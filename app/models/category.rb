@@ -237,7 +237,7 @@ SQL
       errors.add(:slug, 'is already in use') if duplicate_slug?
     else
       # auto slug
-      self.slug = Slug.for(name, '')
+      self.slug = Slug.for(name, fallback: '')
       self.slug = '' if duplicate_slug?
     end
     # only allow to use category itself id. new_record doesn't have a id.
