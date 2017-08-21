@@ -1,8 +1,10 @@
 require 'site_setting_extension'
 require_dependency 'site_settings/yaml_loader'
+require_dependency 'site_settings/slug_concern'
 
 class SiteSetting < ActiveRecord::Base
   extend SiteSettingExtension
+  include SiteSettings::SlugConcern
 
   validates_presence_of :name
   validates_presence_of :data_type
