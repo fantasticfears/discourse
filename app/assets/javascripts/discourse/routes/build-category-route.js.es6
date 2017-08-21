@@ -11,6 +11,10 @@ export default (filterArg, params) => {
     queryParams,
 
     model(modelParams) {
+      modelParams.slug = encodeURIComponent(modelParams.slug);
+      if (modelParams.parentSlug) {
+        modelParams.parentSlug = encodeURIComponent(modelParams.parentSlug);
+      }
       const category = Category.findBySlug(modelParams.slug, modelParams.parentSlug);
       if (!category) {
         return Category.reloadBySlug(modelParams.slug, modelParams.parentSlug).then((atts) => {
