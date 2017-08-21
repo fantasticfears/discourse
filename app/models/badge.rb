@@ -213,7 +213,7 @@ class Badge < ActiveRecord::Base
   end
 
   def slug
-    Slug.for(self.display_name, '-')
+    Slug.for(self.display_name, fallback: '-')
   end
 
   protected

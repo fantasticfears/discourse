@@ -4,8 +4,18 @@ require 'rails_helper'
 require 'slug'
 
 describe Slug do
-
   describe '#for' do
+    let(:default_slug) { 'topic' }
+    let(:very_long_string) { '内容似乎不清晰，这是个完整的句子吗？内容似乎不清晰，这是个完整的句子吗？' }
+
+    it 'returns topic by default' do
+      expect(Slug.for('')).to eq default_slug
+    end
+
+    it 'accepts fallback' do
+      expect(Slug.for('', fallback: 'king')).to eq 'king'
+    end
+
     context 'ascii generator' do
       before { SiteSetting.slug_generation_method = 'ascii' }
 
@@ -14,47 +24,51 @@ describe Slug do
       end
 
       it 'generates default slug when nothing' do
-        expect(Slug.for('')).to eq('topic')
+        expect(Slug.for('')).to eq(default_slug)
       end
 
       it "doesn't generate slugs that are just numbers" do
-        expect(Slug.for('123')).to eq('topic')
+        expect(Slug.for('123')).to eq(default_slug)
+      end
+
+      it "fallbacks to empty string if it's too long" do
+        expect(Slug.for(very_long_string)).to eq(default_slug)
       end
     end
 
     context 'encoded generator' do
       before { SiteSetting.slug_generation_method = 'encoded' }
-      after { SiteSetting.slug_generation_method = 'ascii' }
 
       it 'generates the slug' do
-        expect(Slug.for("熱帶風暴畫眉")).to eq('熱帶風暴畫眉')
+        expect(Slug.for('熱帶風暴畫眉')).to eq('%E7%86%B1%E5%B8%B6%E9%A2%A8%E6%9A%B4%E7%95%AB%E7%9C%89')
       end
 
       it 'generates default slug when nothing' do
-        expect(Slug.for('')).to eq('topic')
+        expect(Slug.for('')).to eq(default_slug)
       end
 
       it "doesn't generate slugs that are just numbers" do
-        expect(Slug.for('123')).to eq('topic')
+        expect(Slug.for('123')).to eq(default_slug)
+      end
+
+      it "returns UTF8 string" do
+        expect(Slug.for('ascii'.b)).to eq('ascii')
       end
     end
 
     context 'none generator' do
       before { SiteSetting.slug_generation_method = 'none' }
-      after { SiteSetting.slug_generation_method = 'ascii' }
 
       it 'generates the slug' do
-        expect(Slug.for("hello world", 'category')).to eq('category')
-        expect(Slug.for("hello world")).to eq('topic')
-        expect(Slug.for('')).to eq('topic')
-        expect(Slug.for('123')).to eq('topic')
+        expect(Slug.for("hello world", fallback: 'category')).to eq('category')
+        expect(Slug.for("hello world")).to eq(default_slug)
+        expect(Slug.for('')).to eq(default_slug)
+        expect(Slug.for('123')).to eq(default_slug)
       end
     end
   end
 
   describe '#ascii_generator' do
-    before { SiteSetting.slug_generation_method = 'ascii' }
-
     it 'replaces spaces with hyphens' do
       expect(Slug.ascii_generator("hello world")).to eq('hello-world')
     end
@@ -107,19 +121,16 @@ describe Slug do
   end
 
   describe '#encoded_generator' do
-    before { SiteSetting.slug_generation_method = 'encoded' }
-    after { SiteSetting.slug_generation_method = 'ascii' }
-
     it 'generates precentage encoded string' do
-      expect(Slug.encoded_generator("Jeff hate's !~-_|,=#this")).to eq("Jeff-hates-this")
-      expect(Slug.encoded_generator("뉴스피드")).to eq("뉴스피드")
-      expect(Slug.encoded_generator("آموزش اضافه کردن لینک اختیاری به هدر")).to eq("آموزش-اضافه-کردن-لینک-اختیاری-به-هدر")
-      expect(Slug.encoded_generator("熱帶風暴畫眉")).to eq("熱帶風暴畫眉")
+      expect(Slug.encoded_generator("Jeff hate's !~-_|,=#this")).to eq("jeff-hates-this")
+      expect(Slug.encoded_generator("뉴스피드")).to eq("%EB%89%B4%EC%8A%A4%ED%94%BC%EB%93%9C")
+      expect(Slug.encoded_generator("آموزش اضافه کردن لینک اختیاری به هدر")).to eq("%D8%A2%D9%85%D9%88%D8%B2%D8%B4-%D8%A7%D8%B6%D8%A7%D9%81%D9%87-%DA%A9%D8%B1%D8%AF%D9%86-%D9%84%DB%8C%D9%86%DA%A9-%D8%A7%D8%AE%D8%AA%DB%8C%D8%A7%D8%B1%DB%8C-%D8%A8%D9%87-%D9%87%D8%AF%D8%B1")
+      expect(Slug.encoded_generator("熱帶風暴畫眉")).to eq("%E7%86%B1%E5%B8%B6%E9%A2%A8%E6%9A%B4%E7%95%AB%E7%9C%89")
     end
 
     it 'reject RFC 3986 reserved character and blank' do
       expect(Slug.encoded_generator(":/?#[]@!$ &'()*+,;=% -_`~.")).to eq("")
-      expect(Slug.encoded_generator(" - English and Chinese title with special characters / 中文标题 !@:?\\:'`#^& $%&*()` -- ")).to eq("English-and-Chinese-title-with-special-characters-中文标题")
+      expect(Slug.encoded_generator(" - English and Chinese title with special characters / 中文标题 !@:?\\:'`#^& $%&*()` -- ")).to eq("english-and-chinese-title-with-special-characters-%E4%B8%AD%E6%96%87%E6%A0%87%E9%A2%98")
     end
 
     it 'generates null when nothing' do
@@ -129,12 +140,21 @@ describe Slug do
     it "keeps number unchanged" do
       expect(Slug.encoded_generator('123')).to eq('123')
     end
+
+    it "returns UTF8 string" do
+      expect(Slug.encoded_generator('ascii'.b)).to eq('ascii')
+    end
+
+    it "kills trailing dash" do
+      expect(Slug.encoded_generator("2- -this!~-_|,we-#-=^-")).to eq('2-this-we')
+    end
+
+    it 'downcase the string' do
+      expect(Slug.encoded_generator("LoWer")).to eq('lower')
+    end
   end
 
   describe '#none_generator' do
-    before { SiteSetting.slug_generation_method = 'none' }
-    after { SiteSetting.slug_generation_method = 'ascii' }
-
     it 'generates nothing' do
       expect(Slug.none_generator("Jeff hate's this")).to eq('')
       expect(Slug.none_generator(nil)).to eq('')
