@@ -51,7 +51,7 @@ module Slug
   end
 
   def self.percent_encode(str)
-    URI.escape(str.encode("UTF-8")).to_s
+    URI.escape(URI.unescape(str.encode("UTF-8"))).to_s
   end
 
   def self.fallback_if_too_long(string)

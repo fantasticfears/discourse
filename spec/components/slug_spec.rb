@@ -54,6 +54,10 @@ describe Slug do
       it "returns UTF8 string" do
         expect(Slug.for('ascii'.b)).to eq('ascii')
       end
+
+      it 'is idempotent' do
+        expect(Slug.for(Slug.for('熱帶風暴畫眉'))).to eq '%E7%86%B1%E5%B8%B6%E9%A2%A8%E6%9A%B4%E7%95%AB%E7%9C%89'
+      end
     end
 
     context 'none generator' do
